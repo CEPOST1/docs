@@ -49,6 +49,11 @@ return [
     'providers' => [
         'profile' => ['web', 'tikwm'],
         'tikwm_base' => 'https://www.tikwm.com',
+        // Paid tikwm-compatible service (e.g. tikwmapi.com): copy these from its dashboard / docs.
+        'tikwm_prefix' => '/api',     // path before /user/info, /user/posts ...
+        'tikwm_key' => '',            // your API key
+        'tikwm_key_header' => '',     // header name if the key goes in a header (e.g. 'X-API-KEY')
+        'tikwm_key_param' => '',      // query parameter name if the key goes in the URL (e.g. 'key')
         // Endpoint used for stories. Must return tikwm-style JSON {code:0, data:{videos:[...]}}.
         'stories_endpoint' => 'https://www.tikwm.com/api/user/story',
         // Single video / downloader: tiktok.com first, then tikwm.

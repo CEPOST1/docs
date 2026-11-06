@@ -33,13 +33,29 @@ final class TikwmProvider implements Provider
             $this->headers[] = 'X-RapidAPI-Host: ' . $host;
         } else {
             $this->base = rtrim((string) Config::get('providers.tikwm_base', 'https://www.tikwm.com'), '/');
-            $this->prefix = '/api';
+            $this->prefix = rtrim((string) Config::get('providers.tikwm_prefix', '/api'), '/');
+            // Paid tikwm-compatible services (e.g. tikwmapi.com): API key sent as a header and/or query param.
+            $this->apiKey = trim((string) Config::get('providers.tikwm_key', ''));
+            if (!preg_match('/^[A-Za-z0-9_.:-]{0,200}$/', $this->apiKey)) {
+                $this->apiKey = '';
+            }
+            $hdr = (string) Config::get('providers.tikwm_key_header', '');
+            if ($this->apiKey !== '' && preg_match('/^[A-Za-z0-9-]{1,40}$/', $hdr)) {
+                $this->headers[] = $hdr . ': ' . $this->apiKey;
+            }
+            $param = (string) Config::get('providers.tikwm_key_param', '');
+            $this->keyParam = preg_match('/^[A-Za-z0-9_]{1,40}$/', $param) ? $param : '';
+            $this->paid = $this->apiKey !== '';
         }
     }
 
+    private string $apiKey = '';
+    private string $keyParam = '';
+    private bool $paid = false;
+
     private function throttle(): void
     {
-        if ($this->rapid) {
+        if ($this->rapid || $this->paid) {
             return;
         }
         $fp = @fopen(ROOT . '/storage/tikwm.lock', 'c+');
@@ -66,6 +82,9 @@ final class TikwmProvider implements Provider
 
     private function call(string $endpoint, array $params, string $method = 'GET'): array
     {
+        if ($this->apiKey !== '' && $this->keyParam !== '') {
+            $params[$this->keyParam] = $this->apiKey;
+        }
         $url = str_starts_with($endpoint, 'https://') ? $endpoint : $this->base . $endpoint;
         for ($attempt = 0; $attempt < 2; $attempt++) {
             $this->throttle();

@@ -669,6 +669,13 @@ final class App
                 $out[] = 'FAIL ' . $label . ': ' . $e->getMessage() . ' (' . (int) ((microtime(true) - $t) * 1000) . ' ms)';
             }
         }
+        $t = microtime(true);
+        try {
+            $tp = (new \App\TikTok\TikwmProvider())->profile('tiktok');
+            $out[] = $ok($tp !== null) . ' configured tikwm provider (' . Config::get('providers.tikwm_base') . Config::get('providers.tikwm_prefix', '/api') . ', key ' . (Config::get('providers.tikwm_key') ? 'set' : 'none') . '): ' . ($tp ? 'followers=' . ($tp['followers'] ?? '?') : 'not found') . ', ' . (int) ((microtime(true) - $t) * 1000) . ' ms';
+        } catch (\Throwable $e) {
+            $out[] = 'FAIL configured tikwm provider: ' . $e->getMessage();
+        }
         if (trim((string) Config::get('providers.rapidapi_key', '')) !== '') {
             $t = microtime(true);
             try {

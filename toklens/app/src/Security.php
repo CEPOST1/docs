@@ -10,13 +10,13 @@ final class Security
     private static ?string $key = null;
 
     /** Hosts our server is allowed to talk to for API calls. */
-    public const API_HOSTS = ['tiktok.com', 'tikwm.com', 'rapidapi.com'];
+    public const API_HOSTS = ['tiktok.com', 'tikwm.com', 'tikwmapi.com', 'rapidapi.com'];
 
     /** Hosts allowed for proxied media (images, video, audio). */
     public const MEDIA_HOSTS = [
         'tiktokcdn.com', 'tiktokcdn-us.com', 'tiktokcdn-eu.com', 'tiktokv.com', 'tiktokv.us',
         'tiktokv.eu', 'tiktok.com', 'ibyteimg.com', 'ibytedtos.com', 'byteoversea.com',
-        'muscdn.com', 'tikwm.com',
+        'muscdn.com', 'tikwm.com', 'tikwmapi.com',
     ];
 
     public static function nonce(): string
