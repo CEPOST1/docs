@@ -144,7 +144,14 @@ final class App
 
     private static function lookup(): void
     {
-        $q = self::q('q');
+        // Accept common field names so edited templates / old links keep working.
+        $q = '';
+        foreach (['q', 'search', 'username', 'user', 'u', 'url'] as $field) {
+            $q = self::q($field);
+            if ($q !== '') {
+                break;
+            }
+        }
         if (Security::isTikTokUrl($q) && preg_match('~/(video|photo)/\d+|//(vm|vt)\.tiktok\.com/~i', $q)) {
             self::redirect(url('/video-downloader') . '?url=' . rawurlencode($q), 302);
             return;
