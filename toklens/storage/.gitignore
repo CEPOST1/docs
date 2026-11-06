@@ -1,0 +1,11 @@
+*
+!.gitignore
+!.htaccess
+!cache/
+!ratelimit/
+!logs/
+!media/
+cache/*
+ratelimit/*
+logs/*
+media/*
