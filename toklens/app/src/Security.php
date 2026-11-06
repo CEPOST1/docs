@@ -10,7 +10,7 @@ final class Security
     private static ?string $key = null;
 
     /** Hosts our server is allowed to talk to for API calls. */
-    public const API_HOSTS = ['tiktok.com', 'tikwm.com'];
+    public const API_HOSTS = ['tiktok.com', 'tikwm.com', 'rapidapi.com'];
 
     /** Hosts allowed for proxied media (images, video, audio). */
     public const MEDIA_HOSTS = [
@@ -189,7 +189,7 @@ final class Security
      * Build a signed URL to our media proxy so it can only fetch URLs our server produced.
      * $kind: 'media' (images) or 'stream' (video/audio). $name non-empty => attachment download.
      */
-    public static function signMedia(?string $url, string $kind = 'media', string $name = ''): ?string
+    public static function signMedia(?string $url, string $kind = 'media', string $name = '', string $cookie = ''): ?string
     {
         if ($url === null || $url === '' || !Http::hostAllowed($url, self::MEDIA_HOSTS)) {
             return null;
@@ -197,31 +197,37 @@ final class Security
         // Expiry rounded to 6h windows so the same media keeps the same URL (browser cache friendly).
         $exp = (intdiv(time(), 21600) + 5) * 21600;
         $name = self::safeFilename($name);
-        $sig = substr(self::hmac("$kind|$exp|$url|$name"), 0, 40);
+        $cookie = Http::safeCookie($cookie);
+        $sig = substr(self::hmac("$kind|$exp|$url|$name|$cookie"), 0, 40);
         $q = 'u=' . self::b64($url) . '&e=' . $exp . '&s=' . $sig;
         if ($name !== '') {
             $q .= '&n=' . rawurlencode($name);
         }
+        if ($cookie !== '') {
+            $q .= '&c=' . self::b64($cookie);
+        }
         return '/' . $kind . '?' . $q;
     }
 
-    /** @return array{0:string,1:string}|null [url, filename] */
+    /** @return array{0:string,1:string,2:string}|null [url, filename, cookie] */
     public static function verifyMedia(string $kind): ?array
     {
         $u = self::unb64((string) ($_GET['u'] ?? ''));
         $exp = (string) ($_GET['e'] ?? '');
         $sig = (string) ($_GET['s'] ?? '');
         $name = self::safeFilename((string) ($_GET['n'] ?? ''));
+        $c = (string) ($_GET['c'] ?? '');
+        $cookie = $c === '' ? '' : Http::safeCookie((string) self::unb64($c));
         if ($u === null || !ctype_digit($exp) || (int) $exp < time() || !preg_match('/^[a-f0-9]{40}$/', $sig)) {
             return null;
         }
-        if (!hash_equals(substr(self::hmac("$kind|$exp|$u|$name"), 0, 40), $sig)) {
+        if (!hash_equals(substr(self::hmac("$kind|$exp|$u|$name|$cookie"), 0, 40), $sig)) {
             return null;
         }
         if (!Http::hostAllowed($u, self::MEDIA_HOSTS)) {
             return null;
         }
-        return [$u, $name];
+        return [$u, $name, $cookie];
     }
 
     public static function safeFilename(string $name): string

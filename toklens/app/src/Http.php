@@ -88,22 +88,31 @@ final class Http
         $timeout = (int) ($opt['timeout'] ?? 12);
         $max = (int) ($opt['max_bytes'] ?? 4_000_000);
         $body = $opt['body'] ?? null;
+        $jar = []; // cookies set by the remote site, kept across redirects
 
         for ($hop = 0; $hop <= 5; $hop++) {
             if (!self::hostAllowed($url, $allowedHosts)) {
                 throw new HttpException('Host not allowed: ' . (parse_url($url, PHP_URL_HOST) ?: '?'));
             }
-            $ch = self::handle($url, $headers, $timeout, true);
+            $hopHeaders = $headers;
+            if ($jar) {
+                $hopHeaders[] = 'Cookie: ' . self::cookieHeader($jar);
+            }
+            $ch = self::handle($url, $hopHeaders, $timeout, true);
             $buf = '';
             $rh = [];
-            curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function ($c, string $line) use (&$rh): int {
+            curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function ($c, string $line) use (&$rh, &$jar): int {
                 $len = strlen($line);
                 $line = trim($line);
                 if (str_starts_with($line, 'HTTP/')) {
                     $rh = [];
                 } elseif (str_contains($line, ':')) {
                     [$k, $v] = explode(':', $line, 2);
-                    $rh[strtolower(trim($k))] = trim($v);
+                    $k = strtolower(trim($k));
+                    $rh[$k] = trim($v);
+                    if ($k === 'set-cookie' && preg_match('/^\s*([A-Za-z0-9_.-]{1,64})=([^;\s]{0,512})/', $v, $cm)) {
+                        $jar[$cm[1]] = $cm[2];
+                    }
                 }
                 return $len;
             });
@@ -130,9 +139,25 @@ final class Http
                 }
                 continue;
             }
-            return ['status' => $status, 'headers' => $rh, 'body' => $buf, 'url' => $url];
+            return ['status' => $status, 'headers' => $rh, 'body' => $buf, 'url' => $url, 'cookies' => $jar];
         }
         throw new HttpException('Too many redirects');
+    }
+
+    /** @param array<string,string> $jar */
+    public static function cookieHeader(array $jar): string
+    {
+        $parts = [];
+        foreach ($jar as $k => $v) {
+            $parts[] = $k . '=' . $v;
+        }
+        return implode('; ', $parts);
+    }
+
+    /** Only allow plain cookie characters (prevents header injection). */
+    public static function safeCookie(string $c): string
+    {
+        return preg_match('/^[A-Za-z0-9_.=;%\- ]{0,2000}$/', $c) ? $c : '';
     }
 
     public static function get(string $url, array $allowedHosts, array $opt = []): array
@@ -144,9 +169,13 @@ final class Http
      * Stream a remote video/audio file to the client without buffering it in memory.
      * Supports Range requests (seeking) and enforces content-type and size limits.
      */
-    public static function stream(string $url, array $allowedHosts, ?string $attachment, string $fallbackType, int $maxBytes): void
+    public static function stream(string $url, array $allowedHosts, ?string $attachment, string $fallbackType, int $maxBytes, string $cookie = ''): void
     {
         $reqHeaders = ['Referer: https://www.tiktok.com/', 'Accept: */*'];
+        $cookie = self::safeCookie($cookie);
+        if ($cookie !== '') {
+            $reqHeaders[] = 'Cookie: ' . $cookie;
+        }
         $range = (string) ($_SERVER['HTTP_RANGE'] ?? '');
         if ($range !== '' && preg_match('/^bytes=\d{0,15}-\d{0,15}$/', $range)) {
             $reqHeaders[] = 'Range: ' . $range;

@@ -82,6 +82,13 @@ final class Service
         throw new UpstreamError('All profile providers failed');
     }
 
+    /** Healthy providers first; providers that failed recently (circuit open) last. */
+    private function ordered(array $names): array
+    {
+        $healthy = array_values(array_filter($names, static fn($n) => !Cache::get('cb:' . $n)));
+        return array_merge($healthy, array_values(array_diff($names, $healthy)));
+    }
+
     /** @return array{items:array, cursor:string, hasMore:bool} */
     public function videos(string $username, string $cursor = '0'): array
     {
@@ -118,14 +125,27 @@ final class Service
             }
             return $cached;
         }
-        try {
-            $r = $this->provider('tikwm')->video($url);
-        } catch (NotFound $e) {
-            Cache::set($key, ['nf' => true], $this->ttl('not_found', 120));
-            throw $e;
+        $names = Config::get('mock') ? ['mock'] : (array) Config::get('providers.video', ['web', 'tikwm']);
+        $notFound = false;
+        foreach ($this->ordered($names) as $name) {
+            try {
+                $r = $this->provider((string) $name)->video($url);
+            } catch (NotFound) {
+                $notFound = true;
+                continue;
+            } catch (UpstreamError | HttpException $e) {
+                error_log('[toklens] video provider ' . $name . ' failed: ' . $e->getMessage());
+                Cache::set('cb:' . $name, 1, 300);
+                continue;
+            }
+            Cache::set($key, $r, $this->ttl('video', 900));
+            return $r;
         }
-        Cache::set($key, $r, $this->ttl('video', 900));
-        return $r;
+        if ($notFound) {
+            Cache::set($key, ['nf' => true], $this->ttl('not_found', 120));
+            throw new NotFound();
+        }
+        throw new UpstreamError('All video providers failed');
     }
 
     /**

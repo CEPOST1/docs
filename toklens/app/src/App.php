@@ -423,11 +423,12 @@ final class App
     public static function presentVideo(array $v): array
     {
         $id = preg_replace('/\D/', '', $v['id']) ?: 'video';
+        $ck = (string) ($v['cookie'] ?? '');
         $dl = array_filter([
-            'hd' => Security::signMedia($v['hdplay'], 'stream', "toklens_{$id}_hd.mp4"),
-            'nowm' => Security::signMedia($v['play'], 'stream', "toklens_{$id}.mp4"),
-            'wm' => Security::signMedia($v['wmplay'], 'stream', "toklens_{$id}_wm.mp4"),
-            'mp3' => Security::signMedia($v['music'], 'stream', "toklens_{$id}.mp3"),
+            'hd' => Security::signMedia($v['hdplay'], 'stream', "toklens_{$id}_hd.mp4", $ck),
+            'nowm' => Security::signMedia($v['play'], 'stream', "toklens_{$id}.mp4", $ck),
+            'wm' => Security::signMedia($v['wmplay'], 'stream', "toklens_{$id}_wm.mp4", $ck),
+            'mp3' => Security::signMedia($v['music'], 'stream', "toklens_{$id}.mp3", $ck),
         ]);
         $images = [];
         foreach ($v['images'] as $i => $img) {
@@ -449,7 +450,7 @@ final class App
             'pinned' => $v['pinned'],
             'region' => $v['region'],
             'cover' => Security::signMedia($v['cover']),
-            'stream' => Security::signMedia($v['hdplay'] ?? $v['play'], 'stream'),
+            'stream' => Security::signMedia($v['hdplay'] ?? $v['play'], 'stream', '', $ck),
             'dl' => $dl,
             'images' => $images,
             'musicTitle' => $v['musicTitle'],
@@ -548,7 +549,7 @@ final class App
             self::plain(429, 'Too Many Requests');
             return;
         }
-        [$url, $name] = $v;
+        [$url, $name, $cookie] = $v;
         $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
         $file = ROOT . '/storage/media/' . hash('sha256', $url);
         $type = null;
@@ -559,8 +560,12 @@ final class App
         }
         if (!in_array($type, $allowed, true)) {
             try {
+                $imgHeaders = ['Referer: https://www.tiktok.com/', 'Accept: image/avif,image/webp,image/*;q=0.8'];
+                if ($cookie !== '') {
+                    $imgHeaders[] = 'Cookie: ' . $cookie;
+                }
                 $r = Http::get($url, Security::MEDIA_HOSTS, [
-                    'headers' => ['Referer: https://www.tiktok.com/', 'Accept: image/avif,image/webp,image/*;q=0.8'],
+                    'headers' => $imgHeaders,
                     'timeout' => 12,
                     'max_bytes' => 8_000_000,
                 ]);
@@ -596,13 +601,13 @@ final class App
             self::plain(403, 'Forbidden');
             return;
         }
-        [$url, $name] = $v;
+        [$url, $name, $cookie] = $v;
         if (!RateLimiter::hit($name !== '' ? 'download' : 'media')) {
             self::plain(429, 'Too Many Requests');
             return;
         }
         $fallback = str_ends_with($name, '.mp3') ? 'audio/mpeg' : 'video/mp4';
-        Http::stream($url, Security::MEDIA_HOSTS, $name !== '' ? $name : null, $fallback, 400_000_000);
+        Http::stream($url, Security::MEDIA_HOSTS, $name !== '' ? $name : null, $fallback, 400_000_000, $cookie);
     }
 
     // ================================================================== diagnostics
@@ -664,8 +669,19 @@ final class App
                 $out[] = 'FAIL ' . $label . ': ' . $e->getMessage() . ' (' . (int) ((microtime(true) - $t) * 1000) . ' ms)';
             }
         }
+        if (trim((string) Config::get('providers.rapidapi_key', '')) !== '') {
+            $t = microtime(true);
+            try {
+                $p = (new \App\TikTok\TikwmProvider())->profile('tiktok');
+                $out[] = $ok($p !== null) . ' rapidapi user/info: ' . ($p ? 'followers=' . ($p['followers'] ?? '?') : 'not found') . ', ' . (int) ((microtime(true) - $t) * 1000) . ' ms';
+            } catch (\Throwable $e) {
+                $out[] = 'FAIL rapidapi user/info: ' . $e->getMessage();
+            }
+        } else {
+            $out[] = '     rapidapi_key: not set';
+        }
         $out[] = '';
-        foreach ((array) Config::get('providers.profile', []) as $n) {
+        foreach (array_unique(array_merge((array) Config::get('providers.profile', []), (array) Config::get('providers.video', []))) as $n) {
             $out[] = '     circuit-breaker ' . $n . ': ' . (Cache::get('cb:' . $n) ? 'OPEN (skipped for 5 min after a failure)' : 'closed');
         }
         $log = ROOT . '/storage/logs/php-error.log';

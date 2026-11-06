@@ -51,6 +51,14 @@ return [
         'tikwm_base' => 'https://www.tikwm.com',
         // Endpoint used for stories. Must return tikwm-style JSON {code:0, data:{videos:[...]}}.
         'stories_endpoint' => 'https://www.tikwm.com/api/user/story',
+        // Single video / downloader: tiktok.com first, then tikwm.
+        'video' => ['web', 'tikwm'],
+
+        // RECOMMENDED when tikwm.com blocks your hosting (diag shows "403 Just a moment"):
+        // subscribe to "TikTok Scraper" on rapidapi.com (tiktok-scraper7) and paste your key here.
+        // Then the videos list, stories and downloads go through RapidAPI.
+        'rapidapi_key' => '',
+        'rapidapi_host' => 'tiktok-scraper7.p.rapidapi.com',
     ],
 
     // Optional outbound proxy for requests to TikTok (helps when the host IP is blocked).

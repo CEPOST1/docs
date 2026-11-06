@@ -228,11 +228,13 @@
     let loading = false;
     let done = false;
     let started = false;
+    let paused = false; // set after an error so infinite scroll doesn't hammer the server
 
     const empty = (msg) => grid.replaceChildren(el('p', { class: 'feed-empty glass muted', text: msg }));
 
     async function load() {
       if (loading || done) return;
+      paused = false;
       loading = true;
       started = true;
       const sk = skeletons(kind === 'stories' ? 4 : 8);
@@ -258,6 +260,7 @@
         if (!done) more.append(el('button', { class: 'btn glass lit', type: 'button', onclick: load }, T.loadMore || 'More'));
       } catch (err) {
         sk.forEach((s) => s.remove());
+        paused = true;
         more.replaceChildren(el('p', { class: 'muted small', text: err.message }), el('button', { class: 'btn glass lit', type: 'button', onclick: load }, T.retry || 'Retry'));
       } finally {
         loading = false;
@@ -267,7 +270,7 @@
     // infinite scroll for videos
     if (kind === 'videos' && 'IntersectionObserver' in window) {
       new IntersectionObserver((entries) => {
-        if (entries.some((x) => x.isIntersecting) && started && !done) load();
+        if (entries.some((x) => x.isIntersecting) && started && !done && !paused) load();
       }, { rootMargin: '600px' }).observe(more);
     }
     return { load, get started() { return started; } };
