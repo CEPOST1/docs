@@ -36,7 +36,7 @@ $kindName = ['profile' => 'حساب', 'video' => 'فيديو', 'stories' => 'س�
     <input type="hidden" name="csrf" value="<?= e(Admin::loginCsrf()) ?>">
     <label class="adm-label" for="pw">كلمة المرور</label>
     <input class="adm-input" id="pw" name="password" type="password" required minlength="12" autocomplete="current-password" dir="ltr">
-    <button class="btn btn-primary" type="submit"><?= icon('lock') ?> دخول</button>
+    <button class="btn btn-primary" type="submit" data-once><?= icon('lock') ?> دخول</button>
   </form>
 </section></main>
 <?php else: ?>
@@ -56,6 +56,9 @@ $kindName = ['profile' => 'حساب', 'video' => 'فيديو', 'stories' => 'س�
   </nav>
 </header>
 <main class="main wrap adm-main">
+<?php if (($_GET['err'] ?? '') === 'csrf'): ?>
+  <p class="alert alert-error"><?= icon('info') ?> انتهت صلاحية الصفحة. أعد تنفيذ العملية من هذه الصفحة.</p>
+<?php endif; ?>
 
 <?php if ($view === 'overview'): ?>
   <section class="adm-cards">
@@ -223,6 +226,7 @@ $kindName = ['profile' => 'حساب', 'video' => 'فيديو', 'stories' => 'س�
 <?php endif; ?>
 </main>
 <?php endif; ?>
-<script nonce="<?= e($nonce) ?>">document.addEventListener('click',function(e){var b=e.target.closest('[data-confirm]');if(b&&!confirm(b.dataset.confirm))e.preventDefault();});</script>
+<script nonce="<?= e($nonce) ?>">document.addEventListener('click',function(e){var b=e.target.closest('[data-confirm]');if(b&&!confirm(b.dataset.confirm))e.preventDefault();});
+document.addEventListener('submit',function(e){var b=e.target.querySelector('[data-once]');if(b){if(b.dataset.sent){e.preventDefault();}b.dataset.sent='1';}});</script>
 </body>
 </html>

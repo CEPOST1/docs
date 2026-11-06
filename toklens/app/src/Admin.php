@@ -46,9 +46,14 @@ final class Admin
         }
 
         if ($post) {
+            // Login form re-sent (double tap / refresh after logging in): just open the panel.
+            if (($_POST['action'] ?? '') === 'login') {
+                self::redirect('');
+                return;
+            }
             if (!hash_equals(self::csrf(), (string) ($_POST['csrf'] ?? ''))) {
-                http_response_code(400);
-                echo 'Bad CSRF token';
+                // Stale page (opened before a new login, or from cache): go back and retry from a fresh page.
+                self::redirect((string) ($_GET['v'] ?? ''), ['err' => 'csrf']);
                 return;
             }
             self::action((string) ($_POST['action'] ?? ''));
