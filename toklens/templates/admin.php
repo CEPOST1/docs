@@ -4,7 +4,7 @@ use App\Admin;
 use App\Security;
 
 $nonce = Security::nonce();
-$tabs = ['overview' => ['نظرة عامة', 'sparkles'], 'live' => ['الزوار الآن', 'users'], 'searches' => ['عمليات البحث', 'search'], 'security' => ['الحماية', 'shield'], 'db' => ['قاعدة البيانات', 'hash']];
+$tabs = ['overview' => ['نظرة عامة', 'sparkles'], 'live' => ['الزوار الآن', 'users'], 'searches' => ['عمليات البحث', 'search'], 'security' => ['الحماية', 'shield'], 'db' => ['قاعدة البيانات', 'hash'], 'settings' => ['الإعدادات', 'edit']];
 $csrf = $view === 'login' ? '' : Admin::csrf();
 $fmt = static fn($n) => number_format((float) $n);
 $devName = ['mobile' => 'جوال', 'desktop' => 'كمبيوتر', 'tablet' => 'تابلت', 'bot' => 'بوت', 'crawler' => 'محرك بحث', 'unknown' => 'غير معروف'];
@@ -188,6 +188,23 @@ $kindName = ['profile' => 'حساب', 'video' => 'فيديو', 'stories' => 'س�
         <td dir="ltr" class="break"><?= e($b['path']) ?></td><td dir="ltr" class="break small muted"><?= e(mb_substr((string) $b['ua'], 0, 80)) ?></td>
       </tr><?php endforeach; ?></tbody>
     </table></div>
+  </section>
+
+<?php elseif ($view === 'settings'): ?>
+  <section class="glass panel">
+    <h2 class="panel-title"><?= icon('edit') ?> أقسام الموقع</h2>
+    <?php if (isset($_GET['saved'])): ?><p class="alert glass"><?= icon('info') ?> تم الحفظ. التغيير يظهر فوراً للزوار.</p><?php endif; ?>
+    <form method="post" action="<?= e(Admin::url()) ?>" class="adm-switches">
+      <input type="hidden" name="csrf" value="<?= e($csrf) ?>"><input type="hidden" name="action" value="settings">
+      <?php foreach (App\Features::LIST as $k => [$label, $desc]): $on = App\Features::on($k); ?>
+      <label class="adm-switch">
+        <input type="checkbox" name="f[<?= e($k) ?>]" value="1"<?= $on ? ' checked' : '' ?>>
+        <span class="adm-toggle" aria-hidden="true"></span>
+        <span><b><?= e($label) ?></b><br><span class="muted small"><?= e($desc) ?></span></span>
+      </label>
+      <?php endforeach; ?>
+      <button class="btn btn-primary" type="submit"><?= icon('download') ?> حفظ</button>
+    </form>
   </section>
 
 <?php elseif ($view === 'db'): ?>

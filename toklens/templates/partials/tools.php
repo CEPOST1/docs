@@ -10,7 +10,7 @@ $tools = [
 <section class="section wrap reveal" aria-labelledby="tools-h">
   <h2 id="tools-h" class="section-title"><?= e(t('more_tools')) ?></h2>
   <div class="grid grid-4">
-    <?php foreach ($tools as [$href, $key, $ic, $desc]): if ($href === ($except ?? '')) continue; ?>
+    <?php foreach ($tools as [$href, $key, $ic, $desc]): if ($href === ($except ?? '') || !App\Features::pathOn($href)) continue; ?>
     <a class="card tool-card glass lit" href="<?= e(url($href)) ?>">
       <span class="card-icon"><?= icon($ic) ?></span>
       <span class="card-title"><?= e(t($key)) ?></span>

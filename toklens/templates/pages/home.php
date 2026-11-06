@@ -22,7 +22,8 @@ $steps = ta('how');
 <section class="section wrap reveal" aria-labelledby="feat-h">
   <h2 id="feat-h" class="section-title"><?= e(t('feat_title')) ?></h2>
   <div class="grid grid-3">
-    <?php foreach ($features as $i => [$title, $desc]): ?>
+    <?php foreach ($features as $i => [$title, $desc]):
+        if (($i === 3 && !App\Features::on('downloads') && !App\Features::on('downloader')) || ($i === 4 && !App\Features::on('stories'))) continue; ?>
     <article class="card glass lit">
       <span class="card-icon"><?= icon($featureIcons[$i] ?? 'sparkles') ?></span>
       <h3 class="card-title"><?= e($title) ?></h3>

@@ -558,3 +558,12 @@ a.card:hover, .card:has(.stretched):hover, .vcard:hover { transform: translateY(
 .adm-login .guard-logo { justify-self: center; animation: none; }
 .adm-label { text-align: start; font-weight: 600; font-size: .9rem; }
 .btn.mini { min-height: 32px; padding: 0 12px; font-size: .78rem; }
+.adm-switches { display: grid; gap: 14px; justify-items: start; }
+.adm-switch { display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 12px 14px; border-radius: 16px; background: var(--glass-2); width: 100%; }
+.adm-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.adm-toggle { flex: none; width: 48px; height: 28px; border-radius: 99px; background: rgb(127 127 127 / .35); position: relative; transition: background .25s; }
+.adm-toggle::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .25s var(--spring); box-shadow: 0 2px 6px rgb(0 0 0 / .3); }
+.adm-switch input:checked + .adm-toggle { background: var(--c1); }
+.adm-switch input:checked + .adm-toggle::after { transform: translateX(20px); }
+[dir="rtl"] .adm-switch input:checked + .adm-toggle::after { transform: translateX(-20px); }
+.adm-switch input:focus-visible + .adm-toggle { outline: 2px solid var(--c3); outline-offset: 2px; }

@@ -78,15 +78,19 @@ $ts = static fn(?int $v) => $v ? '<time datetime="' . e(gmdate('c', $v)) . '" da
   <section class="reveal" aria-label="<?= e(t('tab_videos')) ?>">
     <div class="tabs glass" role="tablist">
       <button role="tab" id="tab-videos" aria-controls="panel-videos" aria-selected="true" type="button"><?= icon('video') ?> <?= e(t('tab_videos')) ?></button>
+      <?php if (App\Features::on('stories')): ?>
       <button role="tab" id="tab-stories" aria-controls="panel-stories" aria-selected="false" type="button" tabindex="-1"><?= icon('stories') ?> <?= e(t('tab_stories')) ?></button>
+      <?php endif; ?>
     </div>
     <?php if ($p['private']): ?>
     <p class="alert glass"><?= icon('lock') ?> <?= e(t('private_notice')) ?></p>
     <?php else: ?>
     <div id="panel-videos" role="tabpanel" aria-labelledby="tab-videos" class="feed"
          data-feed="videos" data-user="<?= e($p['uniqueId']) ?>" data-token="<?= e($apiToken) ?>"></div>
+    <?php if (App\Features::on('stories')): ?>
     <div id="panel-stories" role="tabpanel" aria-labelledby="tab-stories" class="feed" hidden
          data-feed="stories" data-user="<?= e($p['uniqueId']) ?>" data-uid="<?= e($p['id']) ?>" data-token="<?= e($apiToken) ?>"></div>
+    <?php endif; ?>
     <?php endif; ?>
   </section>
 </div>

@@ -15,6 +15,7 @@ $nav = [
     ['/account-age', 'nav_age', 'calendar', 'age'],
     ['/articles', 'nav_articles', 'book', 'articles'],
 ];
+$nav = array_values(array_filter($nav, static fn($n) => App\Features::pathOn($n[0])));
 $active = match ($page) {
     'user' => 'home',
     'article' => 'articles',

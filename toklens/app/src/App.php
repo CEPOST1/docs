@@ -105,6 +105,10 @@ final class App
             $u ? self::redirect(url('/user/' . $u), 301) : self::notFound();
             return;
         }
+        if (!Features::pathOn($sub)) {
+            self::notFound();
+            return;
+        }
         if (preg_match('~^/articles/([a-z0-9-]{1,100})$~', $sub, $mm)) {
             self::article($mm[1]);
             return;
@@ -187,7 +191,7 @@ final class App
                 break;
             }
         }
-        if (Security::isTikTokUrl($q) && preg_match('~/(video|photo)/\d+|//(vm|vt)\.tiktok\.com/~i', $q)) {
+        if (Features::on('downloader') && Security::isTikTokUrl($q) && preg_match('~/(video|photo)/\d+|//(vm|vt)\.tiktok\.com/~i', $q)) {
             self::redirect(url('/video-downloader') . '?url=' . rawurlencode($q), 302);
             return;
         }
@@ -502,7 +506,8 @@ final class App
     {
         $id = preg_replace('/\D/', '', $v['id']) ?: 'video';
         $ck = (string) ($v['cookie'] ?? '');
-        $dl = array_filter([
+        $canDl = Features::on('downloads');
+        $dl = !$canDl ? [] : array_filter([
             'hd' => Security::signMedia($v['hdplay'], 'stream', "toklens_{$id}_hd.mp4", $ck),
             'nowm' => Security::signMedia($v['play'], 'stream', "toklens_{$id}.mp4", $ck),
             'wm' => Security::signMedia($v['wmplay'], 'stream', "toklens_{$id}_wm.mp4", $ck),
@@ -512,7 +517,7 @@ final class App
         foreach ($v['images'] as $i => $img) {
             $src = Security::signMedia($img);
             if ($src) {
-                $images[] = ['src' => $src, 'dl' => Security::signMedia($img, 'media', "toklens_{$id}_" . ($i + 1) . '.jpg')];
+                $images[] = ['src' => $src, 'dl' => $canDl ? Security::signMedia($img, 'media', "toklens_{$id}_" . ($i + 1) . '.jpg') : null];
             }
         }
         $author = $v['author']['uniqueId'] ?? '';
@@ -618,6 +623,10 @@ final class App
 
     private static function apiStories(): void
     {
+        if (!Features::on('stories')) {
+            self::json(['error' => 'disabled'], 404);
+            return;
+        }
         if (!self::apiGuard()) {
             return;
         }
@@ -666,6 +675,10 @@ final class App
             return;
         }
         [$url, $name, $cookie] = $v;
+        if ($name !== '' && !Features::on('downloads')) {
+            self::plain(403, 'Downloads are disabled');
+            return;
+        }
         $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
         $file = ROOT . '/storage/media/' . hash('sha256', $url);
         $type = null;
@@ -722,6 +735,10 @@ final class App
             return;
         }
         [$url, $name, $cookie] = $v;
+        if ($name !== '' && !Features::on('downloads')) {
+            self::plain(403, 'Downloads are disabled');
+            return;
+        }
         if (!RateLimiter::hit($name !== '' ? 'download' : 'media')) {
             self::plain(429, 'Too Many Requests');
             return;
@@ -868,9 +885,11 @@ final class App
         $entries = [];
         $static = ['/' => '1.0', '/video-downloader' => '0.9', '/story-viewer' => '0.9', '/account-age' => '0.9', '/articles' => '0.7', '/about' => '0.3', '/privacy' => '0.2', '/terms' => '0.2'];
         foreach ($static as $path => $prio) {
-            $entries[] = [$path, $codes, $prio, null];
+            if (Features::pathOn($path)) {
+                $entries[] = [$path, $codes, $prio, null];
+            }
         }
-        foreach (Articles::all() as $slug => $a) {
+        foreach (Features::on('articles') ? Articles::all() : [] as $slug => $a) {
             $langs = array_values(array_intersect($codes, array_keys($a['i18n'])));
             $entries[] = ['/articles/' . $slug, $langs, '0.8', $a['updated'] ?? $a['date']];
         }

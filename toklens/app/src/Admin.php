@@ -75,6 +75,7 @@ final class Admin
             'searches' => self::view('searches', self::searchData()),
             'security' => self::view('security', self::securityData()),
             'db' => self::view('db', self::dbData()),
+            'settings' => self::view('settings', []),
             default => self::view('overview', self::overviewData()),
         };
     }
@@ -191,6 +192,12 @@ final class Admin
             case 'unban':
                 Db::run('DELETE FROM bans WHERE ip = ?', [$ip]);
                 self::redirect('security');
+                return;
+            case 'settings':
+                foreach (array_keys(Features::LIST) as $k) {
+                    Features::set($k, isset($_POST['f'][$k]));
+                }
+                self::redirect('settings', ['saved' => 1]);
                 return;
             case 'purge':
                 Db::purge();

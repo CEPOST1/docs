@@ -20,7 +20,7 @@ $toolKey = ['/' => 'nav_profile', '/video-downloader' => 'nav_downloader', '/sto
       <p class="lead"><?= e($c['description']) ?></p>
     </header>
     <?= $c['body'] ?>
-    <?php if ($toolKey): ?>
+    <?php if ($toolKey && App\Features::pathOn($a['tool'])): ?>
     <p class="cta"><a class="btn btn-primary" href="<?= e(url($a['tool'])) ?>"><?= icon('sparkles') ?> <?= e(t('art_try')) ?>: <?= e(t($toolKey)) ?></a></p>
     <?php endif; ?>
     <?php if (count($langs) > 1): ?>
