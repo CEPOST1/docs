@@ -699,6 +699,27 @@ final class App
         } catch (\Throwable $e) {
             $out[] = 'FAIL configured tikwm provider: ' . $e->getMessage();
         }
+        // End-to-end: the same calls the profile page makes for its Videos and Stories tabs.
+        $svc = new Service();
+        $t = microtime(true);
+        try {
+            $vr = $svc->videos('tiktok', '0');
+            $first = $vr['items'][0] ?? null;
+            $pv = $first ? self::presentVideo($first) : null;
+            $out[] = $ok(count($vr['items']) > 0) . ' videos list (@tiktok): ' . count($vr['items']) . ' items, cover=' . ($pv && $pv['cover'] ? 'ok' : 'none') . ', stream=' . ($pv && $pv['stream'] ? 'ok' : 'none') . ', ' . (int) ((microtime(true) - $t) * 1000) . ' ms';
+            if ($first && !$pv['cover'] && $first['cover']) {
+                $out[] = '     cover host not allowed: ' . parse_url($first['cover'], PHP_URL_HOST);
+            }
+        } catch (\Throwable $e) {
+            $out[] = 'FAIL videos list: ' . $e->getMessage();
+        }
+        $t = microtime(true);
+        try {
+            $sr = $svc->stories('tiktok', '107955');
+            $out[] = $ok($sr['available']) . ' stories (@tiktok): ' . count($sr['items']) . ' items, available=' . ($sr['available'] ? 'yes' : 'no') . ', ' . (int) ((microtime(true) - $t) * 1000) . ' ms';
+        } catch (\Throwable $e) {
+            $out[] = 'FAIL stories: ' . $e->getMessage();
+        }
         if (trim((string) Config::get('providers.rapidapi_key', '')) !== '') {
             $t = microtime(true);
             try {

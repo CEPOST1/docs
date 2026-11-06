@@ -450,3 +450,61 @@ a.card:hover, .card:has(.stretched):hover { transform: translateY(-4px); }
   body { background: #fff; color: #000; }
 }
 .nav .brand-name { background: none; color: var(--text); }
+
+/* ==========================================================================
+   Comfort & performance pass
+   Calmer colours, softer contrast, and no heavy effects on phones (smooth scrolling).
+   ========================================================================== */
+:root {
+  --text: #ecebf3;
+  --muted: rgb(236 235 243 / .66);
+  --blob-opacity: .30;
+  --glass-solid: rgb(30 27 42 / .86);
+  --rim: rgb(255 255 255 / .32);
+  --rim-soft: rgb(255 255 255 / .10);
+}
+[data-theme="light"] {
+  --bg: #f5f6fa;
+  --bg-2: #eef0f6;
+  --text: #1d1c27;
+  --muted: rgb(29 28 39 / .62);
+  --line: rgb(29 28 39 / .08);
+  --glass: rgb(255 255 255 / .62);
+  --glass-2: rgb(255 255 255 / .85);
+  --glass-tint: linear-gradient(145deg, rgb(255 255 255 / .75), rgb(255 255 255 / .5));
+  --glass-solid: rgb(255 255 255 / .88);
+  --rim: rgb(255 255 255 / .9);
+  --rim-soft: rgb(29 28 39 / .07);
+  --shadow: 0 1px 2px rgb(20 20 50 / .04), 0 12px 32px -14px rgb(40 40 90 / .16);
+  --blob-opacity: .16;
+}
+body { line-height: 1.75; }
+.blob { filter: blur(100px); animation-duration: 70s; }
+.b2 { animation-duration: 80s; } .b3 { animation-duration: 90s; } .b4 { display: none; }
+.glass::before { opacity: .55; }
+.hero-lead, .card p, .faq-body, .prose { color: var(--muted); }
+.prose h1, .prose h2, .prose h3, .prose strong { color: var(--text); }
+.card, .stat, .step, .faq-item { transition: transform .35s var(--ease), box-shadow .35s var(--ease); }
+a.card:hover, .card:has(.stretched):hover, .vcard:hover { transform: translateY(-2px); }
+.vcard:hover img { transform: scale(1.03); }
+.btn:hover { transform: translateY(-1px); }
+.alert-error { background: color-mix(in srgb, var(--c2) 9%, var(--glass-solid)); border-color: color-mix(in srgb, var(--c2) 28%, transparent); color: var(--text); }
+@supports (animation-timeline: view()) {
+  @keyframes reveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+}
+
+/* Phones / touch: keep real glass only on the floating chrome; everything else is solid & fast. */
+@media (max-width: 900px), (pointer: coarse) {
+  .glass:not(.nav):not(.dock):not(.search):not(.modal):not(.lang-menu) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--glass-solid);
+  }
+  .nav, .dock, .search { --blur: 16px; }
+  .blob { animation: none; filter: blur(80px); }
+  .grain { display: none; }
+  .lit::after { display: none; }
+  .avatar-ring { animation: none; }
+  .reveal { animation: none !important; }
+  .vcard { box-shadow: none; }
+}

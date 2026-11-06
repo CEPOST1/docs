@@ -60,12 +60,13 @@
 
   // ---------------------------------------------------------------- liquid glass refraction (Chromium only)
   const brands = navigator.userAgentData?.brands?.map((b) => b.brand).join(' ') || '';
-  if (/Chromium|Google Chrome|Microsoft Edge/.test(brands) && !matchMedia('(prefers-reduced-transparency: reduce)').matches) {
+  const desktop = !matchMedia('(pointer: coarse)').matches && innerWidth > 900;
+  if (desktop && /Chromium|Google Chrome|Microsoft Edge/.test(brands) && !matchMedia('(prefers-reduced-transparency: reduce)').matches) {
     root.classList.add('lg-refract');
   }
 
   // pointer-following light on .lit surfaces
-  document.addEventListener('pointermove', (e) => {
+  if (desktop) document.addEventListener('pointermove', (e) => {
     const t = e.target instanceof Element ? e.target.closest('.lit') : null;
     if (!t) return;
     const r = t.getBoundingClientRect();
@@ -211,7 +212,11 @@
     const url = path + '?' + new URLSearchParams(params).toString();
     const res = await fetch(url, { headers: { 'X-Token': token, Accept: 'application/json' }, credentials: 'same-origin' });
     if (res.status === 429) throw new Error(T.rate || 'rate');
-    if (!res.ok) throw new Error(T.error || 'error');
+    if (!res.ok) {
+      let code = '';
+      try { code = (await res.json()).error || ''; } catch (_) {}
+      throw new Error(`${T.error || 'error'} (${res.status}${code ? ' · ' + code : ''})`);
+    }
     return res.json();
   }
 
