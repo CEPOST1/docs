@@ -212,6 +212,11 @@
     const url = path + '?' + new URLSearchParams({ ...params, t: token }).toString();
     const res = await fetch(url, { headers: { 'X-Token': token, Accept: 'application/json' }, credentials: 'same-origin' });
     if (res.status === 429) throw new Error(T.rate || 'rate');
+    if (res.status === 403) {
+      let code = '';
+      try { code = (await res.clone().json()).error || ''; } catch (_) {}
+      if (code === 'verify') { location.reload(); throw new Error(T.loading || '…'); } // browser check expired
+    }
     if (!res.ok) {
       let code = '';
       try { code = (await res.json()).error || ''; } catch (_) {}

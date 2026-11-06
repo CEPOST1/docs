@@ -199,7 +199,7 @@ return [
     'privacy_title' => 'Gizlilik Politikası',
     'privacy_desc' => 'TokLens verileri nasıl işler: hesap yok, takip çerezi yok, asgari kayıt.',
     'privacy_html' => '<p>Gizliliğiniz önemlidir. {site} mümkün olan en az veriyi toplayacak şekilde tasarlandı.</p>'
-        . '<h2>İşlediğimiz veriler</h2><ul><li><strong>Aramalar:</strong> Gönderdiğiniz kullanıcı adları ve linkler yalnızca herkese açık verileri getirmek için kullanılır ve birkaç dakika önbelleğe alınır.</li><li><strong>Güvenlik:</strong> Kötüye kullanımı önlemek için IP başına kısa ömürlü, karma (hash) bir sayaç tutarız. Ham IP adresleri saklanmaz.</li><li><strong>Çerezler:</strong> Yalnızca dilinizi hatırlayan işlevsel bir çerez kullanılır.</li></ul>'
+        . '<h2>İşlediğimiz veriler</h2><ul><li><strong>Aramalar:</strong> Gönderdiğiniz kullanıcı adları ve linkler yalnızca herkese açık verileri getirmek için kullanılır ve birkaç dakika önbelleğe alınır.</li><li><strong>Güvenlik:</strong> Kötüye kullanımı önlemek için IP başına kısa ömürlü, karma (hash) bir sayaç tutarız.</li><li><strong>Çerezler:</strong> Dilinizi hatırlayan bir çerez ve aşağıda açıklanan bir güvenlik çerezi kullanılır.</li></ul>'
         . '<h2>Üçüncü taraflar</h2><p>Herkese açık TikTok verileri TikTok’tan ve herkese açık veri sağlayıcılarından alınır. Görseller ve videolar sunucumuz üzerinden iletilir; IP adresiniz paylaşılmaz.</p>'
         . '<h2>Kaldırma talepleri</h2><p>Hesap sahipleri profillerinin gösterilmemesini <a href="mailto:{email}">{email}</a> adresine yazarak talep edebilir.</p>',
     'terms_title' => 'Kullanım Koşulları',
@@ -207,4 +207,11 @@ return [
     'terms_html' => '<p>{site} kullanarak bu koşulları kabul etmiş olursunuz.</p>'
         . '<ul><li>Hizmet “olduğu gibi”, ücretsiz ve erişilebilirlik ya da doğruluk garantisi olmadan sunulur.</li><li>İndirdiğiniz içeriği nasıl kullandığınızdan siz sorumlusunuz. Telif haklarına saygı gösterin.</li><li>Sitenin otomatik olarak taranması, istek sınırlarını aşma girişimleri veya her türlü kötüye kullanım yasaktır.</li><li>TikTok, ByteDance Ltd.’nin ticari markasıdır. {site} TikTok ile bağlantılı değildir.</li></ul>'
         . '<p>Sorular: <a href="mailto:{email}">{email}</a></p>',
+
+    'err_403_t' => 'Erişim reddedildi',
+    'err_403_d' => 'İsteğiniz güvenlik sistemimiz tarafından engellendi. Bunun bir hata olduğunu düşünüyorsanız daha sonra tekrar deneyin.',
+    'verify_title' => 'Tarayıcınız kontrol ediliyor…',
+    'verify_text' => 'Bu bir saniye sürer ve siteyi botlardan korur. Lütfen sayfayı açık tutun.',
+    'verify_fail' => 'Kontrol tamamlanamadı. JavaScript’in açık olduğundan emin olun, VPN/otomasyon araçlarını kapatın ve sayfayı yenileyin.',
+    'privacy_logs_html' => '<h2>Güvenlik ve ziyaret kayıtları</h2><p>Hizmeti otomatik kötüye kullanıma karşı korumak için bir güvenlik çerezi kullanır ve ziyaret kayıtlarını (IP adresi, yaklaşık ülke, tarayıcı türü, ziyaret edilen sayfalar ve aramalar) en fazla {days} gün saklarız. Bu kayıtlar yalnızca güvenlik ve toplu istatistik için kullanılır, asla satılmaz.</p>',
 ];

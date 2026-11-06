@@ -209,7 +209,7 @@ return [
     'privacy_title' => 'Privacy Policy',
     'privacy_desc' => 'How TokLens handles data: no accounts, no tracking cookies, minimal logs.',
     'privacy_html' => '<p>Your privacy matters. {site} is designed to collect as little data as possible.</p>'
-        . '<h2>Data we process</h2><ul><li><strong>Searches:</strong> usernames and links you submit are used only to fetch public data and are cached temporarily (minutes) to keep the service fast.</li><li><strong>Security:</strong> to prevent abuse, we keep a short-lived, hashed counter per IP address for rate limiting. Raw IP addresses are not stored by the application.</li><li><strong>Cookies:</strong> we only set a functional cookie remembering your language. Your theme choice stays in your browser.</li></ul>'
+        . '<h2>Data we process</h2><ul><li><strong>Searches:</strong> usernames and links you submit are used only to fetch public data and are cached temporarily (minutes) to keep the service fast.</li><li><strong>Security:</strong> to prevent abuse, we keep a short-lived, hashed counter per IP address for rate limiting.</li><li><strong>Cookies:</strong> a language cookie, and a security cookie described below. Your theme choice stays in your browser.</li></ul>'
         . '<h2>Third parties</h2><p>Public TikTok data is retrieved from TikTok and public data providers. Images and videos are proxied through our server so your IP address is not shared with them.</p>'
         . '<h2>Removal requests</h2><p>Account owners can ask us to stop showing their profile by writing to <a href="mailto:{email}">{email}</a>.</p>',
     'terms_title' => 'Terms of Use',
@@ -217,4 +217,11 @@ return [
     'terms_html' => '<p>By using {site} you agree to these terms.</p>'
         . '<ul><li>The service is provided “as is”, free of charge, without any warranty of availability or accuracy.</li><li>You are responsible for how you use downloaded content. Respect copyright and creators’ rights; do not re-upload content you do not own.</li><li>Automated scraping of this website, attempts to bypass rate limits, or any abuse is prohibited.</li><li>TikTok is a trademark of ByteDance Ltd. {site} is not affiliated with or endorsed by TikTok.</li></ul>'
         . '<p>Questions: <a href="mailto:{email}">{email}</a></p>',
+
+    'err_403_t' => 'Access denied',
+    'err_403_d' => 'Your request was blocked by our security system. If you think this is a mistake, try again later.',
+    'verify_title' => 'Checking your browser…',
+    'verify_text' => 'This takes a second and protects the site from bots. Please keep this page open.',
+    'verify_fail' => 'The check could not be completed. Make sure JavaScript is enabled, disable VPN/automation tools, then refresh the page.',
+    'privacy_logs_html' => '<h2>Security &amp; visit logs</h2><p>To protect the service from automated abuse we set a security cookie and keep visit logs (IP address, approximate country, browser type, pages visited and searches) for up to {days} days. These logs are only used for security and aggregated statistics and are never sold.</p>',
 ];

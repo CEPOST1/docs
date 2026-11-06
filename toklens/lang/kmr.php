@@ -198,11 +198,18 @@ return [
     'privacy_title' => 'Polîtîkaya Nepeniyê',
     'privacy_desc' => 'TokLens çawa bi daneyan re mijûl dibe.',
     'privacy_html' => '<p>{site} hatiye sêwirandin ku herî kêm dane berhev bike.</p>'
-        . '<ul><li><strong>Lêgerîn:</strong> tenê ji bo anîna daneyên giştî têne bikaranîn û çend deqeyan têne tomarkirin.</li><li><strong>Ewlehî:</strong> ji bo pêşîlêgirtina xirab-bikaranînê jimarvanekî kurtdem û haşkirî ji bo her IPyê tê girtin.</li><li><strong>Cookie:</strong> tenê cookieyek ji bo bîranîna zimanê te.</li></ul>'
+        . '<ul><li><strong>Lêgerîn:</strong> tenê ji bo anîna daneyên giştî têne bikaranîn û çend deqeyan têne tomarkirin.</li><li><strong>Ewlehî:</strong> ji bo pêşîlêgirtina xirab-bikaranînê jimarvanekî kurtdem û haşkirî ji bo her IPyê tê girtin.</li><li><strong>Cookie:</strong> cookieyek ji bo zimanê te û cookieyeke ewlehiyê (li jêr).</li></ul>'
         . '<p>Ji bo daxwaza rakirinê: <a href="mailto:{email}">{email}</a></p>',
     'terms_title' => 'Mercên Bikaranînê',
     'terms_desc' => 'Mercên bikaranîna amûrên TokLens.',
     'terms_html' => '<p>Bi bikaranîna {site} tu van mercan qebûl dikî.</p>'
         . '<ul><li>Xizmet “wekî xwe” û belaş tê pêşkêşkirin.</li><li>Tu berpirsiyar î ji bikaranîna naveroka daxistî. Rêz li mafên afirîneran bigire.</li><li>Berhevkirina otomatîk a malperê qedexe ye.</li><li>TikTok marqeya ByteDance Ltd. e.</li></ul>'
         . '<p>Pirs: <a href="mailto:{email}">{email}</a></p>',
+
+    'err_403_t' => 'Gihîştin hat redkirin',
+    'err_403_d' => 'Daxwaza te ji aliyê pergala ewlehiyê ve hat astengkirin. Ger tu difikirî ku ev xelet e, paşê dîsa biceribîne.',
+    'verify_title' => 'Geroka te tê kontrolkirin…',
+    'verify_text' => 'Ev çirkeyekê digire û malperê ji botan diparêze. Ji kerema xwe rûpelê vekirî bihêle.',
+    'verify_fail' => 'Kontrol temam nebû. Piştrast bike ku JavaScript çalak e, VPN an amûrên otomatîk rawestîne, paşê rûpelê nû bike.',
+    'privacy_logs_html' => '<h2>Ewlehî û tomarên serdanê</h2><p>Ji bo parastina xizmetê ji xirab-bikaranîna otomatîk em cookieyeke ewlehiyê bi kar tînin û tomarên serdanê (navnîşana IP, welatê nêzîk, cureyê gerokê, rûpel û lêgerîn) heta {days} rojan diparêzin. Ev tenê ji bo ewlehî û statîstîkan in û qet nayên firotin.</p>',
 ];

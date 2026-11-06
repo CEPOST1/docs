@@ -85,5 +85,37 @@ return [
         'api' => [60, 60],       // JSON API (videos, stories)
         'media' => [400, 60],    // proxied images & video playback chunks
         'download' => [30, 600], // file downloads
+        'session' => [40, 600],     // lookups per browser session / 10 min
+        'session_day' => [400, 86400],
+        'verify' => [15, 600],      // browser checks per IP / 10 min
+        'crawler' => [120, 60],     // verified search engines
     ],
+
+    // ------------------------------------------------------------------ protection
+    'guard' => [
+        'enabled' => true,
+        // Proof-of-work difficulty for the browser check (16-19 recommended; +1 = twice the work).
+        'pow_bits' => 17,
+        // How long a passed browser check lasts (seconds).
+        'pass_ttl' => 21600,
+        // Automatic ban after this many security events from one IP within 10 minutes.
+        'auto_ban_after' => 40,
+        'auto_ban_hours' => 24,
+        // Visit logs for the admin panel, kept this many days.
+        'analytics' => true,
+        'retention_days' => 60,
+        // OPTIONAL but strongest: free Cloudflare Turnstile (dash.cloudflare.com → Turnstile → Add site).
+        'turnstile_site_key' => '',
+        'turnstile_secret' => '',
+    ],
+
+    // ------------------------------------------------------------------ admin panel
+    // Secret path, e.g. 'cp-7Hq2x9LmZt' → https://your-site/cp-7Hq2x9LmZt  (8-64 chars: letters, digits, - _)
+    // Leave empty to disable the panel.
+    'admin_path' => '',
+    // Long password (12+ chars). You may instead put a password_hash() value in admin_password_hash.
+    'admin_password' => '',
+    'admin_password_hash' => '',
+    // Optional: only these IPs may open the panel, e.g. ['1.2.3.4']. Empty = any IP (password still required).
+    'admin_ips' => [],
 ];

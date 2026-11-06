@@ -193,8 +193,15 @@ return [
     'about_html' => '<p>{site} est une boîte à outils indépendante et gratuite pour explorer les données TikTok publiques.</p><ul><li>Nous ne demandons jamais votre mot de passe.</li><li>Nous n’accédons pas aux comptes privés.</li><li>Nous ne sommes pas affiliés à TikTok.</li></ul><p>Contact : <a href="mailto:{email}">{email}</a></p>',
     'privacy_title' => 'Confidentialité',
     'privacy_desc' => 'Comment TokLens traite les données.',
-    'privacy_html' => '<p>{site} collecte le moins de données possible.</p><ul><li><strong>Recherches :</strong> utilisées uniquement pour récupérer des données publiques, en cache quelques minutes.</li><li><strong>Sécurité :</strong> un compteur haché et éphémère par IP limite les abus.</li><li><strong>Cookies :</strong> uniquement un cookie de langue.</li></ul><p>Demandes de retrait : <a href="mailto:{email}">{email}</a></p>',
+    'privacy_html' => '<p>{site} collecte le moins de données possible.</p><ul><li><strong>Recherches :</strong> utilisées uniquement pour récupérer des données publiques, en cache quelques minutes.</li><li><strong>Sécurité :</strong> un compteur haché et éphémère par IP limite les abus.</li><li><strong>Cookies :</strong> un cookie de langue et un cookie de sécurité (voir ci-dessous).</li></ul><p>Demandes de retrait : <a href="mailto:{email}">{email}</a></p>',
     'terms_title' => 'Conditions d’utilisation',
     'terms_desc' => 'Conditions d’utilisation de TokLens.',
     'terms_html' => '<p>En utilisant {site}, vous acceptez ces conditions.</p><ul><li>Service fourni « tel quel », gratuitement.</li><li>Vous êtes responsable de l’usage des contenus téléchargés.</li><li>Le scraping automatisé du site est interdit.</li><li>TikTok est une marque de ByteDance Ltd.</li></ul><p>Questions : <a href="mailto:{email}">{email}</a></p>',
+
+    'err_403_t' => 'Accès refusé',
+    'err_403_d' => 'Votre requête a été bloquée par notre système de sécurité. Si c’est une erreur, réessayez plus tard.',
+    'verify_title' => 'Vérification de votre navigateur…',
+    'verify_text' => 'Cela prend une seconde et protège le site contre les bots. Gardez cette page ouverte.',
+    'verify_fail' => 'La vérification a échoué. Activez JavaScript, désactivez VPN/outils d’automatisation, puis actualisez la page.',
+    'privacy_logs_html' => '<h2>Sécurité et journaux de visite</h2><p>Pour protéger le service contre les abus automatisés, nous utilisons un cookie de sécurité et conservons des journaux de visite (adresse IP, pays approximatif, type de navigateur, pages et recherches) jusqu’à {days} jours. Ils servent uniquement à la sécurité et aux statistiques globales et ne sont jamais vendus.</p>',
 ];

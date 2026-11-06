@@ -22,11 +22,6 @@ final class App
     public static function run(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        if ($method !== 'GET' && $method !== 'HEAD') {
-            header('Allow: GET, HEAD');
-            self::plain(405, 'Method Not Allowed');
-            return;
-        }
         $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
         if (strlen($uri) > 2048) {
             self::plain(414, 'URI Too Long');
@@ -34,6 +29,27 @@ final class App
         }
         $path = parse_url($uri, PHP_URL_PATH);
         $path = is_string($path) && $path !== '' ? (preg_replace('~/{2,}~', '/', $path) ?? '/') : '/';
+
+        // Hidden admin panel (accepts POST for login/actions).
+        $adm = (string) Config::get('admin_path', '');
+        if ($adm !== '' && preg_match('/^[A-Za-z0-9_-]{8,64}$/', $adm) && ($path === '/' . $adm || str_starts_with($path, '/' . $adm . '/'))) {
+            Admin::handle('/' . $adm);
+            return;
+        }
+        if ($path === '/api/verify') {
+            Guard::verifyEndpoint();
+            return;
+        }
+        if ($method !== 'GET' && $method !== 'HEAD') {
+            header('Allow: GET, HEAD');
+            self::plain(405, 'Method Not Allowed');
+            return;
+        }
+        if ($path !== '/robots.txt' && Guard::banned()) {
+            self::plain(403, 'Access denied.');
+            return;
+        }
+        Guard::sid(); // signed session cookie for every visitor
 
         switch ($path) {
             case '/':
@@ -107,6 +123,25 @@ final class App
 
     // ================================================================== pages
 
+    /** Browser-check / anti-abuse gate for pages that fetch TikTok data. */
+    private static function gate(): bool
+    {
+        switch (Guard::check()) {
+            case 'ok':
+                return true;
+            case 'challenge':
+                View::challenge();
+                return false;
+            case 'quota':
+                header('Retry-After: 600');
+                self::error(429, t('err_rate_t'), t('err_rate'));
+                return false;
+            default:
+                self::error(403, t('err_403_t'), t('err_403_d'));
+                return false;
+        }
+    }
+
     /**
      * Read a query parameter. Falls back to parsing REQUEST_URI because some hosts
      * (LiteSpeed rewrites) can drop $_GET; the value is cleaned of invisible characters.
@@ -177,16 +212,22 @@ final class App
             self::redirect(url('/user/' . $u), 301);
             return;
         }
+        if (!self::gate()) {
+            return;
+        }
         if (!RateLimiter::hit('page')) {
             self::error(429, t('err_rate_t'), t('err_rate'));
             return;
         }
         try {
             $p = self::presentProfile(self::svc()->profile($u));
+            Guard::logSearch('profile', $u, true);
         } catch (NotFound) {
+            Guard::logSearch('profile', $u, false);
             self::error(404, t('err_not_found_t'), t('err_not_found_d', ['user' => $u]), $u);
             return;
         } catch (UpstreamError) {
+            Guard::logSearch('profile', $u, false);
             header('Retry-After: 30');
             self::error(503, t('err_upstream_t'), t('err_upstream_d'), $u);
             return;
@@ -221,7 +262,7 @@ final class App
                 Seo::breadcrumbs([[t('breadcrumb_home'), '/'], ['@' . $u, '/user/' . $u]]),
             ],
         ]);
-        View::render('user', ['seo' => $seo, 'p' => $p, 'apiToken' => Security::apiToken()]);
+        View::render('user', ['seo' => $seo, 'p' => $p, 'apiToken' => Guard::apiToken()]);
     }
 
     private static function downloader(): void
@@ -232,15 +273,20 @@ final class App
         if ($input !== '') {
             if (!Security::isTikTokUrl($input)) {
                 $error = t('err_url');
+            } elseif (!self::gate()) {
+                return;
             } elseif (!RateLimiter::hit('page')) {
                 http_response_code(429);
                 $error = t('err_rate');
             } else {
                 try {
                     $result = self::presentVideo(self::svc()->video($input));
+                    Guard::logSearch('video', $input, true);
                 } catch (NotFound) {
+                    Guard::logSearch('video', $input, false);
                     $error = t('err_video_nf');
                 } catch (UpstreamError) {
+                    Guard::logSearch('video', $input, false);
                     $error = t('err_upstream_d');
                 }
             }
@@ -270,9 +316,12 @@ final class App
             $u = Security::normalizeUsername($input);
             if ($u === null) {
                 $error = t('err_invalid');
+            } elseif (!self::gate()) {
+                return;
             } elseif (!RateLimiter::hit('page')) {
                 $error = t('err_rate');
             } else {
+                Guard::logSearch('stories', $u, true);
                 try {
                     $profile = self::presentProfile(self::svc()->profile($u));
                     if (!$profile['private']) {
@@ -314,9 +363,12 @@ final class App
                 }
             } elseif (($u = Security::normalizeUsername($input)) === null) {
                 $error = t('err_invalid');
+            } elseif (!self::gate()) {
+                return;
             } elseif (!RateLimiter::hit('page')) {
                 $error = t('err_rate');
             } else {
+                Guard::logSearch('age', $u, true);
                 try {
                     $p = self::presentProfile(self::svc()->profile($u));
                     $result = ['ts' => $p['created'], 'id' => $p['id'], 'profile' => $p];
@@ -412,7 +464,8 @@ final class App
     private static function staticPage(string $name): void
     {
         $seo = Seo::page(t($name . '_title') . ' — ' . site_name(), t($name . '_desc'), '/' . $name);
-        $html = strtr(t($name . '_html'), [
+        $body = t($name . '_html') . ($name === 'privacy' ? t('privacy_logs_html', ['days' => (int) Config::get('guard.retention_days', 60)]) : '');
+        $html = strtr($body, [
             '{site}' => e(site_name()),
             '{email}' => e((string) Config::get('contact_email', '')),
         ]);
@@ -503,6 +556,7 @@ final class App
     private static function apiGuard(): bool
     {
         if (!Security::sameOrigin()) {
+            Guard::block('api_cross_origin');
             self::json(['error' => 'cross_origin'], 403);
             return false;
         }
@@ -511,9 +565,23 @@ final class App
         if (!is_string($token) || $token === '') {
             $token = self::q('t');
         }
-        if (!Security::verifyApiToken($token)) {
+        if (!Guard::verifyApiToken($token)) {
+            Guard::block('api_bad_token');
             self::json(['error' => $token === '' ? 'no_token' : 'bad_token'], 403);
             return false;
+        }
+        switch (Guard::check()) {
+            case 'ok':
+                break;
+            case 'challenge':
+                self::json(['error' => 'verify'], 403);
+                return false;
+            case 'quota':
+                self::json(['error' => 'rate_limited'], 429);
+                return false;
+            default:
+                self::json(['error' => 'denied'], 403);
+                return false;
         }
         if (!RateLimiter::hit('api')) {
             self::json(['error' => 'rate_limited'], 429);
@@ -571,9 +639,23 @@ final class App
 
     // ================================================================== media proxy
 
+    /** Media proxy is only for browsers that passed the check (and real search engines). */
+    private static function mediaAllowed(): bool
+    {
+        if (!Guard::enabled() || Guard::isCrawler() || Guard::verified()) {
+            return true;
+        }
+        Guard::block('media_without_pass');
+        return false;
+    }
+
     private static function media(): void
     {
         Security::baseHeaders();
+        if (!self::mediaAllowed()) {
+            self::plain(403, 'Forbidden');
+            return;
+        }
         $v = Security::verifyMedia('media');
         if ($v === null) {
             self::plain(403, 'Forbidden');
@@ -630,6 +712,10 @@ final class App
     private static function stream(): void
     {
         Security::baseHeaders();
+        if (!self::mediaAllowed()) {
+            self::plain(403, 'Forbidden');
+            return;
+        }
         $v = Security::verifyMedia('stream');
         if ($v === null) {
             self::plain(403, 'Forbidden');

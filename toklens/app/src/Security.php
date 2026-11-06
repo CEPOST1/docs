@@ -98,17 +98,18 @@ final class Security
     {
         self::baseHeaders();
         $n = self::nonce();
+        $ts = Guard::turnstileKey() !== '';
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'nonce-$n'",
+            "script-src 'self' 'nonce-$n'" . ($ts ? ' https://challenges.cloudflare.com' : ''),
             "style-src 'self' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: blob:",
             "media-src 'self' blob:",
-            "connect-src 'self'",
+            "connect-src 'self'" . ($ts ? ' https://challenges.cloudflare.com' : ''),
             "worker-src 'self'",
             "manifest-src 'self'",
-            "frame-src 'none'",
+            $ts ? 'frame-src https://challenges.cloudflare.com' : "frame-src 'none'",
             "frame-ancestors 'none'",
             "object-src 'none'",
             "base-uri 'none'",

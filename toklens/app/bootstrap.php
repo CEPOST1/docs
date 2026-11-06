@@ -49,4 +49,11 @@ set_exception_handler([App\App::class, 'handleException']);
 // Local development only: TOKLENS_MOCK=1 php -S 127.0.0.1:8080 -t public public/index.php
 if (getenv('TOKLENS_MOCK') === '1') {
     App\Config::set('mock', true);
+    if (getenv('TOKLENS_GUARD') === '1') {
+        App\Config::set('guard_force', true);
+    }
+    if (getenv('TOKLENS_ADMIN') === '1') {
+        App\Config::set('admin_path', 'cp-test-panel');
+        App\Config::set('admin_password', 'test-password-123');
+    }
 }

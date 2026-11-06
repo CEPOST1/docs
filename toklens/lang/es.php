@@ -193,8 +193,15 @@ return [
     'about_html' => '<p>{site} es un conjunto de herramientas independiente y gratuito para explorar datos públicos de TikTok.</p><ul><li>Nunca pedimos tu contraseña.</li><li>No accedemos a cuentas privadas.</li><li>No estamos afiliados a TikTok.</li></ul><p>Contacto: <a href="mailto:{email}">{email}</a></p>',
     'privacy_title' => 'Privacidad',
     'privacy_desc' => 'Cómo trata TokLens los datos.',
-    'privacy_html' => '<p>{site} recoge la menor cantidad de datos posible.</p><ul><li><strong>Búsquedas:</strong> solo para obtener datos públicos, en caché unos minutos.</li><li><strong>Seguridad:</strong> un contador efímero y cifrado por IP limita los abusos.</li><li><strong>Cookies:</strong> solo una cookie de idioma.</li></ul><p>Solicitudes de retirada: <a href="mailto:{email}">{email}</a></p>',
+    'privacy_html' => '<p>{site} recoge la menor cantidad de datos posible.</p><ul><li><strong>Búsquedas:</strong> solo para obtener datos públicos, en caché unos minutos.</li><li><strong>Seguridad:</strong> un contador efímero y cifrado por IP limita los abusos.</li><li><strong>Cookies:</strong> una cookie de idioma y una cookie de seguridad (ver abajo).</li></ul><p>Solicitudes de retirada: <a href="mailto:{email}">{email}</a></p>',
     'terms_title' => 'Términos de uso',
     'terms_desc' => 'Términos de uso de TokLens.',
     'terms_html' => '<p>Al usar {site} aceptas estos términos.</p><ul><li>Servicio ofrecido «tal cual» y gratis.</li><li>Eres responsable del uso del contenido descargado.</li><li>Está prohibido el scraping automatizado del sitio.</li><li>TikTok es una marca de ByteDance Ltd.</li></ul><p>Preguntas: <a href="mailto:{email}">{email}</a></p>',
+
+    'err_403_t' => 'Acceso denegado',
+    'err_403_d' => 'Tu solicitud fue bloqueada por nuestro sistema de seguridad. Si crees que es un error, inténtalo más tarde.',
+    'verify_title' => 'Comprobando tu navegador…',
+    'verify_text' => 'Tarda un segundo y protege el sitio de los bots. Mantén esta página abierta.',
+    'verify_fail' => 'No se pudo completar la comprobación. Activa JavaScript, desactiva VPN/herramientas de automatización y recarga la página.',
+    'privacy_logs_html' => '<h2>Seguridad y registros de visitas</h2><p>Para proteger el servicio del abuso automatizado usamos una cookie de seguridad y guardamos registros de visitas (dirección IP, país aproximado, tipo de navegador, páginas y búsquedas) hasta {days} días. Solo se usan para seguridad y estadísticas agregadas y nunca se venden.</p>',
 ];

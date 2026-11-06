@@ -508,3 +508,53 @@ a.card:hover, .card:has(.stretched):hover, .vcard:hover { transform: translateY(
   .reveal { animation: none !important; }
   .vcard { box-shadow: none; }
 }
+
+/* ------------------------------------------------------------------ browser check */
+.guard-card { width: min(440px, 100%); text-align: center; display: grid; justify-items: center; gap: 6px; }
+.guard-logo { width: 56px; height: 56px; margin-bottom: 6px; animation: guardPulse 1.6s var(--ease) infinite; }
+.guard-title { font-size: 1.4rem; margin: 0; }
+.guard-bar { width: 100%; height: 6px; border-radius: 99px; background: var(--glass-2); overflow: hidden; margin-top: 10px; }
+.guard-bar span { display: block; height: 100%; width: 40%; border-radius: inherit; background: var(--brand); animation: guardBar 1.2s var(--ease) infinite; }
+.guard-card.is-done .guard-bar span { width: 100%; animation: none; }
+.guard-card.is-failed .guard-bar span { background: var(--c2); animation: none; width: 100%; }
+.guard-ts:empty { display: none; }
+@keyframes guardBar { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
+[dir="rtl"] .guard-bar span { animation-direction: reverse; }
+@keyframes guardPulse { 50% { transform: scale(1.06); opacity: .85; } }
+
+/* ------------------------------------------------------------------ admin */
+.adm .nav { max-width: 1400px; }
+.adm-main { max-width: 1400px; }
+.adm-tabs { overflow-x: auto; scrollbar-width: none; }
+.adm-tabs a { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 900px) { .adm .nav-links.adm-tabs { display: flex; margin: 0; } .adm-nav { flex-wrap: wrap; border-radius: 26px; } .adm-tabs { order: 3; width: 100%; } }
+.adm-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-block: 18px; }
+.adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.adm-grid .panel { margin: 0; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.adm-table th, .adm-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: start; vertical-align: middle; }
+.adm-table th { color: var(--muted); font-weight: 600; font-size: .78rem; white-space: nowrap; }
+.adm-table tr:hover td { background: var(--glass-2); }
+.adm-raw td { font-size: .78rem; white-space: nowrap; }
+.adm-scroll { overflow-x: auto; }
+.adm-chart { width: 100%; height: auto; }
+.adm-chart .bar-b { fill: color-mix(in srgb, var(--c3) 35%, transparent); }
+.adm-chart .bar-a { fill: var(--c1); }
+.adm-chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+.adm-legend { margin-inline-start: auto; display: inline-flex; gap: 8px; align-items: center; font-size: .78rem; color: var(--muted); font-weight: 500; }
+.adm-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.adm-legend .lg-a { background: var(--c1); } .adm-legend .lg-b { background: color-mix(in srgb, var(--c3) 45%, transparent); }
+.adm-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.adm-bars li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.adm-meter { grid-column: 1 / -1; width: 100%; height: 6px; }
+.adm-meter .m-bg { fill: var(--glass-2); } .adm-meter .m-fg { fill: var(--c1); }
+.adm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-chips .tag { text-decoration: none; }
+.adm-chips .is-on { outline: 2px solid var(--c1); }
+.adm-filter, .adm-form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.adm-input { flex: 1 1 160px; min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--rim-soft); background: var(--glass-2); color: var(--text); font: inherit; }
+.adm-input:focus { outline: 2px solid var(--c3); outline-offset: 1px; }
+.adm-login { width: min(400px, 100%); display: grid; gap: 10px; justify-items: stretch; text-align: center; }
+.adm-login .guard-logo { justify-self: center; animation: none; }
+.adm-label { text-align: start; font-weight: 600; font-size: .9rem; }
+.btn.mini { min-height: 32px; padding: 0 12px; font-size: .78rem; }

@@ -7,10 +7,11 @@ namespace App;
 /** Fixed-window rate limiter backed by locked files. IPs are stored only as salted hashes. */
 final class RateLimiter
 {
-    public static function hit(string $bucket): bool
+    /** @param string|null $key defaults to the client IP; pass a session id for per-session quotas. */
+    public static function hit(string $bucket, ?string $key = null): bool
     {
         [$max, $window] = Config::get('rate_limits.' . $bucket, [60, 60]);
-        $id = hash_hmac('sha256', $bucket . '|' . Security::clientIp(), Security::key());
+        $id = hash_hmac('sha256', $bucket . '|' . ($key ?? Security::clientIp()), Security::key());
         $file = ROOT . '/storage/ratelimit/' . $id;
         $fp = @fopen($file, 'c+');
         if ($fp === false) {
@@ -31,7 +32,12 @@ final class RateLimiter
             fwrite($fp, $start . ':' . $count);
             fflush($fp);
             if ($count > $max) {
-                header('Retry-After: ' . max(1, $window - ($now - $start)));
+                if (!headers_sent()) {
+                    header('Retry-After: ' . max(1, $window - ($now - $start)));
+                }
+                if ($key === null && $count <= $max + 50) {
+                    Guard::block('rate_limit:' . $bucket); // repeated abuse leads to an automatic ban
+                }
                 return false;
             }
             return true;
