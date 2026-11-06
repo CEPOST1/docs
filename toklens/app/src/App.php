@@ -107,6 +107,23 @@ final class App
 
     // ================================================================== pages
 
+    /**
+     * Read a query parameter. Falls back to parsing REQUEST_URI because some hosts
+     * (LiteSpeed rewrites) can drop $_GET; the value is cleaned of invisible characters.
+     */
+    private static function q(string $name): string
+    {
+        $v = $_GET[$name] ?? null;
+        if (!is_string($v) || $v === '') {
+            $qs = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_QUERY);
+            if (is_string($qs) && $qs !== '') {
+                parse_str($qs, $arr);
+                $v = $arr[$name] ?? '';
+            }
+        }
+        return is_string($v) ? Security::cleanInput(mb_substr($v, 0, 500)) : '';
+    }
+
     private static function home(?string $error = null, string $input = ''): void
     {
         $faq = ta('faq_home');
@@ -127,13 +144,14 @@ final class App
 
     private static function lookup(): void
     {
-        $q = trim((string) ($_GET['q'] ?? ''));
+        $q = self::q('q');
         if (Security::isTikTokUrl($q) && preg_match('~/(video|photo)/\d+|//(vm|vt)\.tiktok\.com/~i', $q)) {
             self::redirect(url('/video-downloader') . '?url=' . rawurlencode($q), 302);
             return;
         }
         $u = Security::normalizeUsername($q);
         if ($u === null) {
+            error_log('[toklens] invalid lookup input: len=' . strlen($q) . ' hex=' . bin2hex(substr($q, 0, 40)) . ' get=' . (isset($_GET['q']) ? 'yes' : 'no'));
             self::home(t('err_invalid'), mb_substr($q, 0, 100));
             return;
         }
@@ -201,7 +219,7 @@ final class App
 
     private static function downloader(): void
     {
-        $input = trim((string) ($_GET['url'] ?? ''));
+        $input = self::q('url');
         $result = null;
         $error = null;
         if ($input !== '') {
@@ -237,7 +255,7 @@ final class App
 
     private static function stories(): void
     {
-        $input = trim((string) ($_GET['u'] ?? ''));
+        $input = self::q('u');
         $profile = null;
         $stories = null;
         $error = null;
@@ -277,7 +295,7 @@ final class App
 
     private static function age(): void
     {
-        $input = trim((string) ($_GET['q'] ?? ''));
+        $input = self::q('q');
         $result = null;
         $error = null;
         if ($input !== '') {
@@ -493,7 +511,7 @@ final class App
         if (!self::apiGuard()) {
             return;
         }
-        $u = Security::normalizeUsername((string) ($_GET['u'] ?? ''));
+        $u = Security::normalizeUsername(self::q('u'));
         $cursor = (string) ($_GET['cursor'] ?? '0');
         if ($u === null || !preg_match('/^\d{1,20}$/', $cursor)) {
             self::json(['error' => 'bad_request'], 400);
@@ -519,7 +537,7 @@ final class App
         if (!self::apiGuard()) {
             return;
         }
-        $u = Security::normalizeUsername((string) ($_GET['u'] ?? ''));
+        $u = Security::normalizeUsername(self::q('u'));
         $id = (string) ($_GET['id'] ?? '');
         if ($u === null || ($id !== '' && !Security::isNumericId($id))) {
             self::json(['error' => 'bad_request'], 400);

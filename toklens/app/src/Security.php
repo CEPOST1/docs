@@ -240,9 +240,32 @@ final class Security
     // ---------------------------------------------------------------- Input validation
 
     /** Accepts "user", "@user", "tiktok.com/@user", full profile/video URLs. Returns lowercase username or null. */
+    /**
+     * Clean text typed on phones: removes invisible direction marks / zero-width characters,
+     * odd spaces, and converts full-width and Arabic/Persian digits to plain ASCII.
+     */
+    public static function cleanInput(string $s): string
+    {
+        if (!mb_check_encoding($s, 'UTF-8')) {
+            return '';
+        }
+        $s = (string) preg_replace('/[\p{Cf}\p{Cc}]+/u', '', $s);          // RLM, LRM, ZWSP, BOM, controls
+        $s = (string) preg_replace('/[\p{Z}\x{3000}]+/u', ' ', $s);        // NBSP & other spaces → space
+        $s = strtr($s, [
+            '＠' => '@', '﹫' => '@', '．' => '.', '。' => '.', '＿' => '_', '٫' => '.', '۔' => '.',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4', '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        ]);
+        if (class_exists(\Normalizer::class)) {
+            $s = (string) \Normalizer::normalize($s, \Normalizer::FORM_KC); // full-width letters → ASCII
+        }
+        return trim($s);
+    }
+
     public static function normalizeUsername(string $input): ?string
     {
-        $input = trim($input);
+        $input = self::cleanInput($input);
+        $input = (string) preg_replace('/\s+/', '', $input);
         if ($input === '' || strlen($input) > 300) {
             return null;
         }
@@ -258,7 +281,7 @@ final class Security
 
     public static function isTikTokUrl(string $url): bool
     {
-        $url = trim($url);
+        $url = self::cleanInput($url);
         if (strlen($url) > 400 || !filter_var($url, FILTER_VALIDATE_URL)) {
             return false;
         }
