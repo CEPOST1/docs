@@ -36,7 +36,7 @@ final class TikwmProvider implements Provider
             $this->prefix = rtrim((string) Config::get('providers.tikwm_prefix', '/api'), '/');
             // Paid tikwm-compatible services (e.g. tikwmapi.com): API key sent as a header and/or query param.
             $this->apiKey = trim((string) Config::get('providers.tikwm_key', ''));
-            if (!preg_match('/^[A-Za-z0-9_.:-]{0,200}$/', $this->apiKey)) {
+            if (!preg_match('/^[\x21-\x7E]{0,300}$/', $this->apiKey)) { // printable, no spaces/newlines
                 $this->apiKey = '';
             }
             $hdr = (string) Config::get('providers.tikwm_key_header', '');
@@ -97,7 +97,13 @@ final class TikwmProvider implements Provider
                 $r = Http::get($url . '?' . http_build_query($params), Security::API_HOSTS, $opt);
             }
             if ($r['status'] !== 200) {
-                $hint = str_contains($r['body'], 'Just a moment') ? ' (Cloudflare blocks this server — use a RapidAPI key)' : '';
+                $hint = str_contains($r['body'], 'Just a moment') ? ' (Cloudflare blocks this server — use a paid API key)' : '';
+                if ($r['status'] === 401 || $r['status'] === 403) {
+                    $hint .= ' (check the API key)';
+                }
+                if ($r['status'] === 429) {
+                    $hint .= ' (rate limit / quota: ' . substr(strip_tags($r['body']), 0, 120) . ')';
+                }
                 throw new UpstreamError(($this->rapid ? 'rapidapi' : 'tikwm') . ' HTTP ' . $r['status'] . $hint);
             }
             $j = json_decode($r['body'], true);
@@ -166,7 +172,7 @@ final class TikwmProvider implements Provider
 
     public function stories(string $username, string $userId): array
     {
-        $endpoint = $this->rapid ? $this->prefix . '/user/story'
+        $endpoint = ($this->rapid || $this->paid) ? $this->prefix . '/user/story'
             : (string) Config::get('providers.stories_endpoint', $this->base . '/api/user/story');
         $params = ['unique_id' => $username];
         if ($userId !== '') {
