@@ -37,9 +37,14 @@ final class Admin
             if ($post && ($_POST['action'] ?? '') === 'login') {
                 $error = self::login();
                 if ($error === null) {
-                    self::redirect('');
+                    self::redirect('', ['in' => 1]);
                     return;
                 }
+            } elseif (isset($_GET['in'])) {
+                // Login succeeded but the browser came back without the session cookie.
+                $error = 'تم قبول كلمة المرور لكن المتصفح لم يحفظ كوكي الدخول. '
+                    . 'جرّب متصفحاً آخر (Chrome)، أو أوقف وضع حظر الكوكيز، أو امسح الكاش من hPanel ← Cache Manager ثم حاول مجدداً.'
+                    . (isset($_COOKIE[self::COOKIE]) ? ' (الكوكي موجود لكن غير صالح)' : ' (لم يصل أي كوكي)');
             }
             self::view('login', ['error' => $error]);
             return;
@@ -128,11 +133,14 @@ final class Admin
             return 'كلمة المرور غير صحيحة.';
         }
         $token = bin2hex(random_bytes(32));
-        Db::run('INSERT INTO admin_sessions(token, ip, ua, created, expires) VALUES(?,?,?,?,?)',
+        $saved = Db::run('INSERT INTO admin_sessions(token, ip, ua, created, expires) VALUES(?,?,?,?,?)',
             [hash('sha256', $token), $ip, self::uaHash(), time(), time() + 12 * 3600]);
+        if ($saved === null) {
+            return 'كلمة المرور صحيحة لكن تعذّر حفظ الجلسة في قاعدة البيانات. تأكد أن مجلد storage قابل للكتابة (755).';
+        }
         Db::run('DELETE FROM admin_fails WHERE ip = ?', [$ip]);
         setcookie(self::COOKIE, $token, [
-            'expires' => time() + 12 * 3600, 'path' => self::$base, 'secure' => Security::isHttps(),
+            'expires' => time() + 12 * 3600, 'path' => '/', 'secure' => Security::isHttps(),
             'httponly' => true, 'samesite' => 'Strict',
         ]);
         return null;
@@ -169,6 +177,7 @@ final class Admin
         switch ($a) {
             case 'logout':
                 Db::run('DELETE FROM admin_sessions WHERE token = ?', [self::$tokenHash]);
+                setcookie(self::COOKIE, '', ['expires' => 1, 'path' => '/', 'secure' => Security::isHttps(), 'httponly' => true, 'samesite' => 'Strict']);
                 setcookie(self::COOKIE, '', ['expires' => 1, 'path' => self::$base, 'secure' => Security::isHttps(), 'httponly' => true, 'samesite' => 'Strict']);
                 self::redirect('');
                 return;
