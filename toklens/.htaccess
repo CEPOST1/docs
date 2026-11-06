@@ -1,0 +1,13 @@
+# Used only when the hosting forces the document root to be THIS folder
+# (e.g. shared hosting where you cannot point the domain to /public).
+Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Never expose application code, storage, or config
+  RewriteRule ^(app|storage|templates|lang|content|tests)(/|$) - [F,L]
+  RewriteRule (^|/)\. - [F,L]
+  RewriteRule \.(md|sh|example|lock|json|log)$ - [F,L]
+  # Serve everything from /public
+  RewriteCond %{REQUEST_URI} !^/public/
+  RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
