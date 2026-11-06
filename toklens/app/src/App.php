@@ -644,8 +644,6 @@ final class App
 
         $tests = [
             'tiktok.com profile page' => ['https://www.tiktok.com/@tiktok?lang=en', ['Accept: text/html', 'Accept-Language: en-US,en;q=0.9']],
-            'tikwm user/info' => [rtrim((string) Config::get('providers.tikwm_base', 'https://www.tikwm.com'), '/') . '/api/user/info?unique_id=tiktok', ['Accept: application/json']],
-            'tikwm user/posts' => [rtrim((string) Config::get('providers.tikwm_base', 'https://www.tikwm.com'), '/') . '/api/user/posts?unique_id=tiktok&count=1&cursor=0', ['Accept: application/json']],
         ];
         foreach ($tests as $label => [$url, $headers]) {
             $t = microtime(true);
