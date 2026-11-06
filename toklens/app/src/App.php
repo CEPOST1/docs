@@ -57,6 +57,9 @@ final class App
             case '/stream':
                 self::stream();
                 return;
+            case '/diag':
+                self::diag();
+                return;
         }
 
         if (!preg_match('~^/([a-z]{2,3})(/.*)?$~', $path, $m) || !I18n::supported($m[1])) {
@@ -600,6 +603,81 @@ final class App
         }
         $fallback = str_ends_with($name, '.mp3') ? 'audio/mpeg' : 'video/mp4';
         Http::stream($url, Security::MEDIA_HOSTS, $name !== '' ? $name : null, $fallback, 400_000_000);
+    }
+
+    // ================================================================== diagnostics
+
+    /** Password-protected self-test: /diag?key=... (disabled while 'diag_key' is empty). */
+    private static function diag(): void
+    {
+        $secret = (string) Config::get('diag_key', '');
+        $given = (string) ($_GET['key'] ?? '');
+        if (strlen($secret) < 12 || !hash_equals($secret, $given) || !RateLimiter::hit('page')) {
+            self::plain(404, 'Not Found');
+            return;
+        }
+        Security::baseHeaders();
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Cache-Control: no-store');
+        header('X-Robots-Tag: noindex');
+        @set_time_limit(90);
+        $ok = static fn(bool $b) => $b ? 'OK  ' : 'FAIL';
+        $out = [];
+        $out[] = 'TokLens diagnostics — ' . gmdate('Y-m-d H:i:s') . ' UTC';
+        $out[] = str_repeat('=', 60);
+        $out[] = $ok(PHP_VERSION_ID >= 80100) . ' PHP ' . PHP_VERSION;
+        foreach (['curl', 'json', 'mbstring', 'intl', 'openssl'] as $ext) {
+            $out[] = $ok(extension_loaded($ext)) . ' ext ' . $ext;
+        }
+        $cv = function_exists('curl_version') ? curl_version() : [];
+        $out[] = '     curl ' . ($cv['version'] ?? '?') . ' / ' . ($cv['ssl_version'] ?? '?');
+        foreach (['cache', 'ratelimit', 'logs', 'media'] as $d) {
+            $out[] = $ok(is_writable(ROOT . '/storage/' . $d)) . ' storage/' . $d . ' writable';
+        }
+        $out[] = '     base_url: ' . base_url() . ' | outbound_proxy: ' . (Config::get('outbound_proxy') ? 'set' : 'none');
+        $out[] = '';
+
+        $tests = [
+            'tiktok.com profile page' => ['https://www.tiktok.com/@tiktok?lang=en', ['Accept: text/html', 'Accept-Language: en-US,en;q=0.9']],
+            'tikwm user/info' => [rtrim((string) Config::get('providers.tikwm_base', 'https://www.tikwm.com'), '/') . '/api/user/info?unique_id=tiktok', ['Accept: application/json']],
+            'tikwm user/posts' => [rtrim((string) Config::get('providers.tikwm_base', 'https://www.tikwm.com'), '/') . '/api/user/posts?unique_id=tiktok&count=1&cursor=0', ['Accept: application/json']],
+        ];
+        foreach ($tests as $label => [$url, $headers]) {
+            $t = microtime(true);
+            try {
+                $r = Http::get($url, Security::API_HOSTS, ['headers' => $headers, 'timeout' => 15, 'max_bytes' => 6_000_000]);
+                $ms = (int) ((microtime(true) - $t) * 1000);
+                $body = $r['body'];
+                $info = 'HTTP ' . $r['status'] . ', ' . strlen($body) . ' bytes, ' . $ms . ' ms';
+                if (str_contains($label, 'tiktok.com')) {
+                    $has = str_contains($body, '__UNIVERSAL_DATA_FOR_REHYDRATION__');
+                    $code = preg_match('~"statusCode":(\d+)~', $body, $m) ? $m[1] : '?';
+                    $user = str_contains($body, '"uniqueId":"tiktok"');
+                    $out[] = $ok($r['status'] === 200 && $user) . " $label: $info | state-json=" . ($has ? 'yes' : 'no') . " statusCode=$code user-found=" . ($user ? 'yes' : 'no');
+                } else {
+                    $j = json_decode($body, true);
+                    $code = is_array($j) ? (string) ($j['code'] ?? '?') : 'not-json';
+                    $msg = is_array($j) ? (string) ($j['msg'] ?? '') : substr(preg_replace('/\s+/', ' ', strip_tags($body)) ?? '', 0, 120);
+                    $out[] = $ok($r['status'] === 200 && $code === '0') . " $label: $info | code=$code msg=" . mb_substr($msg, 0, 120);
+                }
+            } catch (\Throwable $e) {
+                $out[] = 'FAIL ' . $label . ': ' . $e->getMessage() . ' (' . (int) ((microtime(true) - $t) * 1000) . ' ms)';
+            }
+        }
+        $out[] = '';
+        foreach ((array) Config::get('providers.profile', []) as $n) {
+            $out[] = '     circuit-breaker ' . $n . ': ' . (Cache::get('cb:' . $n) ? 'OPEN (skipped for 5 min after a failure)' : 'closed');
+        }
+        $log = ROOT . '/storage/logs/php-error.log';
+        if (is_file($log)) {
+            $lines = array_slice(file($log, FILE_IGNORE_NEW_LINES) ?: [], -15);
+            $out[] = '';
+            $out[] = 'Last log lines:';
+            foreach ($lines as $l) {
+                $out[] = '  ' . mb_substr($l, 0, 300);
+            }
+        }
+        echo implode("\n", $out), "\n";
     }
 
     // ================================================================== robots & sitemap

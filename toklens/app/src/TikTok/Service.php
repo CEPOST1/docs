@@ -49,11 +49,21 @@ final class Service
 
         $notFound = false;
         $names = Config::get('mock') ? ['mock'] : (array) Config::get('providers.profile', ['web', 'tikwm']);
-        foreach ($names as $name) {
+        // Circuit breaker: a provider that just failed goes to the end of the queue for 5 minutes and is
+        // only tried if no healthy provider answered — visitors don't wait on a known-bad source.
+        $healthy = array_values(array_filter($names, static fn($n) => !Cache::get('cb:' . $n)));
+        $broken = array_values(array_diff($names, $healthy));
+        $attempted = 0;
+        foreach (array_merge($healthy, $broken) as $name) {
+            if (in_array($name, $broken, true) && $attempted > 0) {
+                break;
+            }
+            $attempted++;
             try {
                 $p = $this->provider((string) $name)->profile($username);
             } catch (UpstreamError | HttpException $e) {
                 error_log('[toklens] profile provider ' . $name . ' failed: ' . $e->getMessage());
+                Cache::set('cb:' . $name, 1, 300);
                 continue;
             }
             if ($p === null) {

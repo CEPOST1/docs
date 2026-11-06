@@ -21,7 +21,7 @@ final class WebProvider implements Provider
                 'Accept-Language: en-US,en;q=0.9',
                 'Cache-Control: no-cache',
             ],
-            'timeout' => 15,
+            'timeout' => 8,
             'max_bytes' => 6_000_000,
         ]);
         if ($r['status'] === 404) {

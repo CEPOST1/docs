@@ -42,7 +42,7 @@ final class Http
         $opts = [
             CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
             CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_CONNECTTIMEOUT => 6,
+            CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_USERAGENT => self::UA,

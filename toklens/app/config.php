@@ -21,6 +21,10 @@ return [
     // Leave empty to auto-generate one in storage/.app_key on first run.
     'app_key' => '',
 
+    // Diagnostics page: set a long secret (12+ chars) then open https://your-site/diag?key=THAT_SECRET
+    // It tests PHP, storage and the connection to TikTok / tikwm. Leave empty to disable it.
+    'diag_key' => '',
+
     // Never enable on a public server: shows PHP errors.
     'debug' => false,
 

@@ -47,7 +47,7 @@ final class TikwmProvider implements Provider
         $url = str_starts_with($endpoint, 'https://') ? $endpoint : $this->base . $endpoint;
         for ($attempt = 0; $attempt < 2; $attempt++) {
             self::throttle();
-            $opt = ['headers' => ['Accept: application/json'], 'timeout' => 20, 'max_bytes' => 3_000_000];
+            $opt = ['headers' => ['Accept: application/json'], 'timeout' => 10, 'max_bytes' => 3_000_000];
             if ($method === 'POST') {
                 $opt['body'] = http_build_query($params);
                 $opt['headers'][] = 'Content-Type: application/x-www-form-urlencoded';
