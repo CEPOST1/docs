@@ -502,8 +502,17 @@ final class App
 
     private static function apiGuard(): bool
     {
-        if (!Security::sameOrigin() || !Security::verifyApiToken($_SERVER['HTTP_X_TOKEN'] ?? null)) {
-            self::json(['error' => 'forbidden'], 403);
+        if (!Security::sameOrigin()) {
+            self::json(['error' => 'cross_origin'], 403);
+            return false;
+        }
+        // Token from header, or from the query string when a proxy strips custom headers.
+        $token = $_SERVER['HTTP_X_TOKEN'] ?? null;
+        if (!is_string($token) || $token === '') {
+            $token = self::q('t');
+        }
+        if (!Security::verifyApiToken($token)) {
+            self::json(['error' => $token === '' ? 'no_token' : 'bad_token'], 403);
             return false;
         }
         if (!RateLimiter::hit('api')) {

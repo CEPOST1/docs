@@ -119,6 +119,9 @@ final class Security
         }
         header('Content-Security-Policy: ' . implode('; ', $csp));
         header('Content-Type: text/html; charset=utf-8');
+        // Pages embed a short-lived API token: tell LiteSpeed / CDN page caches not to store them.
+        header('X-LiteSpeed-Cache-Control: no-cache');
+        header('CDN-Cache-Control: no-store');
     }
 
     public static function clientIp(): string
@@ -142,16 +145,12 @@ final class Security
 
     // ---------------------------------------------------------------- API token
 
-    private static function uaHash(): string
-    {
-        return substr(hash('sha256', (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 16);
-    }
 
     /** Stateless token embedded in pages; required by the JSON API so it cannot be hot-linked. */
     public static function apiToken(): string
     {
         $ts = (string) time();
-        return $ts . '.' . substr(self::hmac('api|' . $ts . '|' . self::uaHash()), 0, 32);
+        return $ts . '.' . substr(self::hmac('api|' . $ts), 0, 32);
     }
 
     public static function verifyApiToken(?string $token): bool
@@ -161,10 +160,11 @@ final class Security
         }
         $ts = (int) $m[1];
         $now = time();
-        if ($ts > $now + 60 || $now - $ts > 6 * 3600) {
+        if ($ts > $now + 300 || $now - $ts > 24 * 3600) {
             return false;
         }
-        return hash_equals(substr(self::hmac('api|' . $m[1] . '|' . self::uaHash()), 0, 32), $m[2]);
+        // Not bound to the User-Agent: CDNs / page caches can serve a page generated for another browser.
+        return hash_equals(substr(self::hmac('api|' . $m[1]), 0, 32), $m[2]);
     }
 
     /** Reject cross-site requests to the JSON API. */

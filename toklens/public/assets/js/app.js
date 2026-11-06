@@ -209,7 +209,7 @@
 
   // ---------------------------------------------------------------- feeds (videos / stories)
   async function api(path, params, token) {
-    const url = path + '?' + new URLSearchParams(params).toString();
+    const url = path + '?' + new URLSearchParams({ ...params, t: token }).toString();
     const res = await fetch(url, { headers: { 'X-Token': token, Accept: 'application/json' }, credentials: 'same-origin' });
     if (res.status === 429) throw new Error(T.rate || 'rate');
     if (!res.ok) {
